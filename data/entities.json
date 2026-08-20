@@ -1,0 +1,28 @@
+[
+    {
+      "id": "takshaka",
+      "canonical_name": "Takshaka",
+      "regional_names": { "te": "తక్షకుడు" },
+      "category": "Character",
+      "source_texts": ["Mahabharata Adi Parva"],
+      "attributes": {
+        "q_epic_mahabharata": 1.0,
+        "q_is_serpent": 1.0,
+        "q_sarpa_yaga": 1.0
+      }
+    },
+    {
+      "id": "janamejaya",
+      "canonical_name": "Janamejaya",
+      "regional_names": { "te": "జనమేజయుడు" },
+      "category": "Character",
+      "source_texts": ["Mahabharata Adi Parva"],
+      "attributes": {
+        "q_epic_mahabharata": 1.0,
+        "q_is_serpent": 0.0,
+        "q_sarpa_yaga": 0.0
+      }
+    }
+  ]
+
+  
