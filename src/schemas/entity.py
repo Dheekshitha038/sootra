@@ -10,8 +10,8 @@ class HeritageEntity(BaseModel) :
     id : str 
     canonical_name : str 
     category : str
-    regional_name : Dict[str, str]
-    source_text : List[str]
+    regional_name : Dict[str, str] = {}
+    source_text : List[str] = []
     spatial_coordinates : Optional[GeoCoordinate] = None
     attributes : Dict[str, float]
 

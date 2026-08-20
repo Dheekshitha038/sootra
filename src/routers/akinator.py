@@ -13,7 +13,7 @@ engine = BayesianAkinatorEngine(entities, questions)
 @router.get('/start', response_model = GameStartResponse)
 def start_game() : 
     initial_probs = [1.0/ engine.num_entities]*engine.num_entities
-    first_q = engine.get_next_best_question(initial_probs, [])
+    first_q = engine.get_next_best_question(np.array(initial_probs), [])
     return {
         "session_state": {
             "probabilities": initial_probs,
