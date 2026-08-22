@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 const API_BASE = "http://localhost:8000/api/v1/akinator";
 
 export async function callStart() {
