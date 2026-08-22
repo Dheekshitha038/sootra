@@ -1,107 +1,36 @@
-import  { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 
 /* ============================================================
-   JIGYASU — frontend prototype
-   Mirrors src/services/akinator_engine.py (BayesianAkinatorEngine)
-   client-side so the game works standalone tonight.
-
-   TO WIRE UP THE REAL BACKEND LATER:
-   Replace callStart() / callAnswer() bodies with fetch() calls to
+   JIGYASU — frontend, wired to the real FastAPI backend.
    GET  /api/v1/akinator/start
    POST /api/v1/akinator/answer
-   The GameSessionState shape ({ probabilities, asked_questions })
-   already matches src/schemas/game.py exactly, so the rest of the
-   component tree needs zero changes.
    ============================================================ */
 
-// ---- Mock data (mirrors entities.json / questions.json shape) ----
+const API_BASE = "http://localhost:8000/api/v1/akinator";
+
+async function callStart() {
+  const res = await fetch(`${API_BASE}/start`);
+  if (!res.ok) throw new Error(`start failed: ${res.status}`);
+  return res.json();
+}
+
+async function callAnswer(sessionState, questionId, answer) {
+  const res = await fetch(`${API_BASE}/answer`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_state: sessionState,
+      question_id: questionId,
+      answer,
+    }),
+  });
+  if (!res.ok) throw new Error(`answer failed: ${res.status}`);
+  return res.json();
+}
+
 // NOTE: entities.json currently sends "regional_names" / "source_texts"
 // (plural) but HeritageEntity in entity.py expects "regional_name" /
-// "source_text" (singular) — pydantic drops the mismatch silently.
-// This file reads both spellings defensively so the UI works either way.
-
-const QUESTIONS = [
-  {
-    id: "q_epic_mahabharata",
-    category: "Epic",
-    text: {
-      en: "Is this entity primarily associated with the Mahabharata?",
-      te: "ఈ పాత్ర మహాభారతంతో సంబంధం కలిగి ఉందా?",
-    },
-  },
-  {
-    id: "q_is_serpent",
-    category: "Lineage",
-    text: {
-      en: "Is this entity a Naga or serpent figure?",
-      te: "ఈ పాత్ర ఒక నాగరాజు లేదా సర్పమా?",
-    },
-  },
-  {
-    id: "q_sarpa_yaga",
-    category: "Event",
-    text: {
-      en: "Was this character targeted in Janamejaya's Sarpa Yaga?",
-      te: "ఈ పాత్ర జనమేజయుని సర్పయాగంలో లక్ష్యంగా మారిందా?",
-    },
-  },
-  {
-    id: "q_festival",
-    category: "Practice",
-    text: {
-      en: "Is this celebrated as an annual festival today?",
-      te: "ఇది నేటికీ వార్షిక పండుగగా జరుపుకుంటారా?",
-    },
-  },
-  {
-    id: "q_is_monument",
-    category: "Form",
-    text: {
-      en: "Is this a physical monument or structure?",
-      te: "ఇది ఒక భౌతిక కట్టడమా?",
-    },
-  },
-];
-
-const ENTITIES = [
-  {
-    id: "takshaka",
-    canonical_name: "Takshaka",
-    regional_name: { te: "తక్షకుడు" },
-    category: "Character",
-    source_text: ["Mahabharata, Adi Parva"],
-    spatial_coordinates: { name: "Hastinapur region", latitude: 29.15, longitude: 78.0 },
-    attributes: { q_epic_mahabharata: 1.0, q_is_serpent: 1.0, q_sarpa_yaga: 1.0, q_festival: 0.0, q_is_monument: 0.0 },
-  },
-  {
-    id: "janamejaya",
-    canonical_name: "Janamejaya",
-    regional_name: { te: "జనమేజయుడు" },
-    category: "Character",
-    source_text: ["Mahabharata, Adi Parva"],
-    spatial_coordinates: { name: "Hastinapur", latitude: 29.17, longitude: 78.02 },
-    attributes: { q_epic_mahabharata: 1.0, q_is_serpent: 0.0, q_sarpa_yaga: 0.0, q_festival: 0.0, q_is_monument: 0.0 },
-  },
-  {
-    id: "nagula_chavithi",
-    canonical_name: "Nagula Chavithi",
-    regional_name: { te: "నాగుల చవితి" },
-    category: "Festival",
-    source_text: ["Andhra & Telangana regional tradition"],
-    spatial_coordinates: { name: "Telangana / Andhra Pradesh", latitude: 17.4, longitude: 78.5 },
-    attributes: { q_epic_mahabharata: 0.0, q_is_serpent: 1.0, q_sarpa_yaga: 0.0, q_festival: 1.0, q_is_monument: 0.0 },
-  },
-  {
-    id: "konark_sun_temple",
-    canonical_name: "Konark Sun Temple",
-    regional_name: { or: "କୋଣାର୍କ ସୂର୍ଯ୍ୟ ମନ୍ଦିର" },
-    category: "Monument",
-    source_text: ["13th century, Eastern Ganga dynasty"],
-    spatial_coordinates: { name: "Konark, Odisha", latitude: 19.89, longitude: 86.09 },
-    attributes: { q_epic_mahabharata: 0.0, q_is_serpent: 0.0, q_sarpa_yaga: 0.0, q_festival: 0.0, q_is_monument: 1.0 },
-  },
-];
-
+// "source_text" (singular) — fix that server-side or these will read blank.
 function regionalName(entity) {
   const dict = entity.regional_name || entity.regional_names || {};
   const vals = Object.values(dict);
@@ -109,79 +38,6 @@ function regionalName(entity) {
 }
 function sourceTexts(entity) {
   return entity.source_text || entity.source_texts || [];
-}
-
-// ---- Engine: direct port of BayesianAkinatorEngine ----
-class Engine {
-  constructor(entities, questions) {
-    this.entities = entities;
-    this.questions = Object.fromEntries(questions.map((q) => [q.id, q]));
-    this.questionIds = questions.map((q) => q.id);
-    this.matrix = entities.map((e) => this.questionIds.map((qid) => (qid in e.attributes ? e.attributes[qid] : 0.5)));
-  }
-  entropy(probs) {
-    let h = 0;
-    for (const p of probs) if (p > 1e-9) h -= p * Math.log2(p);
-    return h;
-  }
-  updateBeliefs(probs, questionId, answer) {
-    const weightMap = { yes: 1.0, probably: 0.75, unknown: 0.5, probably_not: 0.25, no: 0.0 };
-    const target = weightMap[answer] ?? 0.5;
-    const qIdx = this.questionIds.indexOf(questionId);
-    const updated = probs.map((p, i) => (1 - Math.abs(this.matrix[i][qIdx] - target)) * p);
-    const total = updated.reduce((a, b) => a + b, 0);
-    if (total > 0) return updated.map((v) => v / total);
-    return probs.map(() => 1 / probs.length);
-  }
-  getNextBestQuestion(probs, askedIds) {
-    const currentH = this.entropy(probs);
-    let bestGain = -1;
-    let bestQ = null;
-    this.questionIds.forEach((qid, j) => {
-      if (askedIds.includes(qid)) return;
-      const pYes = probs.reduce((sum, p, i) => sum + p * this.matrix[i][j], 0);
-      const pNo = 1 - pYes;
-      if (pYes < 1e-5 || pNo < 1e-5) return;
-      const postYes = probs.map((p, i) => (p * this.matrix[i][j]) / pYes);
-      const postNo = probs.map((p, i) => (p * (1 - this.matrix[i][j])) / pNo);
-      const expectedH = pYes * this.entropy(postYes) + pNo * this.entropy(postNo);
-      const gain = currentH - expectedH;
-      if (gain > bestGain) {
-        bestGain = gain;
-        bestQ = qid;
-      }
-    });
-    return bestQ ? this.questions[bestQ] : null;
-  }
-  getTopPrediction(probs) {
-    let topIdx = 0;
-    probs.forEach((p, i) => {
-      if (p > probs[topIdx]) topIdx = i;
-    });
-    return { entity: this.entities[topIdx], confidence: probs[topIdx] };
-  }
-}
-
-const engine = new Engine(ENTITIES, QUESTIONS);
-
-// ---- API layer (swap these two functions for real fetch calls) ----
-async function callStart() {
-  const initial = ENTITIES.map(() => 1 / ENTITIES.length);
-  const firstQuestion = engine.getNextBestQuestion(initial, []);
-  return { session_state: { probabilities: initial, asked_questions: [] }, first_question: firstQuestion, is_finished: false };
-}
-async function callAnswer(sessionState, questionId, answer) {
-  const asked = [...sessionState.asked_questions, questionId];
-  const newProbs = engine.updateBeliefs(sessionState.probabilities, questionId, answer);
-  const { entity, confidence } = engine.getTopPrediction(newProbs);
-  if (confidence > 0.85) {
-    return { session_state: { probabilities: newProbs, asked_questions: asked }, next_question: null, is_finished: true, confidence, prediction: entity };
-  }
-  const nextQuestion = engine.getNextBestQuestion(newProbs, asked);
-  if (!nextQuestion) {
-    return { session_state: { probabilities: newProbs, asked_questions: asked }, next_question: null, is_finished: true, confidence, prediction: entity };
-  }
-  return { session_state: { probabilities: newProbs, asked_questions: asked }, next_question: nextQuestion, is_finished: false, confidence, prediction: null };
 }
 
 // ---- Map projection (stylized, not survey-accurate) ----
@@ -235,7 +91,7 @@ function ScrollCard({ children, style }) {
   );
 }
 
-function Landing({ onStart }) {
+function Landing({ onStart, loading, error }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 560, gap: 28, padding: "40px 20px", textAlign: "center" }}>
       <div style={{ fontFamily: "'Yatra One', cursive", fontSize: 15, letterSpacing: 4, color: "#C9A227", textTransform: "uppercase" }}>
@@ -248,6 +104,7 @@ function Landing({ onStart }) {
       </p>
       <button
         onClick={onStart}
+        disabled={loading}
         style={{
           fontFamily: "'Karla', sans-serif",
           fontWeight: 700,
@@ -259,15 +116,18 @@ function Landing({ onStart }) {
           border: "none",
           borderRadius: 4,
           padding: "16px 40px",
-          cursor: "pointer",
+          cursor: loading ? "default" : "pointer",
+          opacity: loading ? 0.6 : 1,
           boxShadow: "0 10px 24px rgba(201,162,39,0.35)",
         }}
       >
-        Begin
+        {loading ? "Connecting…" : "Begin"}
       </button>
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#6B5E4E" }}>
-        {ENTITIES.length} entities loaded · prototype dataset
-      </div>
+      {error && (
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#E07A5F", maxWidth: 420 }}>
+          {error} — is the backend running at {API_BASE}?
+        </div>
+      )}
     </div>
   );
 }
@@ -280,7 +140,7 @@ const ANSWER_OPTIONS = [
   { key: "no", label: "No" },
 ];
 
-function GameScreen({ session, question, confidence, lang, setLang, onAnswer, loading }) {
+function GameScreen({ session, question, confidence, lang, setLang, onAnswer, loading, error }) {
   const askedCount = session.asked_questions.length;
   return (
     <div style={{ padding: "28px 20px 40px", display: "flex", flexDirection: "column", alignItems: "center", gap: 26 }}>
@@ -344,6 +204,12 @@ function GameScreen({ session, question, confidence, lang, setLang, onAnswer, lo
           </button>
         ))}
       </div>
+
+      {error && (
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#E07A5F", maxWidth: 460, textAlign: "center" }}>
+          {error}
+        </div>
+      )}
 
       {askedCount > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", maxWidth: 460, marginTop: 6 }}>
@@ -434,6 +300,11 @@ function MapTimeline({ entity, onBack, onRestart }) {
             {coords.name}
           </div>
         )}
+        {!pin && (
+          <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#5A6A64" }}>
+            no coordinates for this entity yet
+          </div>
+        )}
         <div style={{ position: "absolute", bottom: 6, right: 8, fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: "#4A6A62" }}>
           stylized · prototype
         </div>
@@ -455,9 +326,6 @@ function MapTimeline({ entity, onBack, onRestart }) {
               </div>
             </div>
           ))}
-        </div>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#5A4E3E", marginTop: -8 }}>
-          note: dated era/timeline field not yet in schema — placeholder nodes from source_text
         </div>
       </div>
 
@@ -485,32 +353,45 @@ export default function App() {
   const [prediction, setPrediction] = useState(null);
   const [lang, setLang] = useState("en");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const start = useCallback(async () => {
     setLoading(true);
-    const res = await callStart();
-    setSession(res.session_state);
-    setQuestion(res.first_question);
-    setConfidence(1 / ENTITIES.length);
-    setPrediction(null);
-    setScreen("game");
-    setLoading(false);
+    setError(null);
+    try {
+      const res = await callStart();
+      setSession(res.session_state);
+      setQuestion(res.first_question);
+      setConfidence(res.session_state.probabilities.length ? Math.max(...res.session_state.probabilities) : 0);
+      setPrediction(null);
+      setScreen("game");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const answer = useCallback(
     async (ans) => {
       if (!question) return;
       setLoading(true);
-      const res = await callAnswer(session, question.id, ans);
-      setSession(res.session_state);
-      setConfidence(res.confidence);
-      if (res.is_finished) {
-        setPrediction(res.prediction);
-        setScreen("reveal");
-      } else {
-        setQuestion(res.next_question);
+      setError(null);
+      try {
+        const res = await callAnswer(session, question.id, ans);
+        setSession(res.session_state);
+        setConfidence(res.confidence);
+        if (res.is_finished) {
+          setPrediction(res.prediction);
+          setScreen("reveal");
+        } else {
+          setQuestion(res.next_question);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     },
     [session, question]
   );
@@ -521,6 +402,7 @@ export default function App() {
     setQuestion(null);
     setPrediction(null);
     setConfidence(0);
+    setError(null);
   }, []);
 
   return (
@@ -533,9 +415,9 @@ export default function App() {
       }}
     >
       <div style={{ width: "100%", maxWidth: 560 }}>
-        {screen === "landing" && <Landing onStart={start} />}
+        {screen === "landing" && <Landing onStart={start} loading={loading} error={error} />}
         {screen === "game" && (
-          <GameScreen session={session} question={question} confidence={confidence} lang={lang} setLang={setLang} onAnswer={answer} loading={loading} />
+          <GameScreen session={session} question={question} confidence={confidence} lang={lang} setLang={setLang} onAnswer={answer} loading={loading} error={error} />
         )}
         {screen === "reveal" && prediction && (
           <RevealScreen prediction={prediction} confidence={confidence} onExplore={() => setScreen("map")} onRestart={restart} />
