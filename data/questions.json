@@ -1,28 +1,48 @@
 [
-    {
-      "id": "q_epic_mahabharata",
-      "text": {
-        "en": "Is this entity primarily associated with the Mahabharata?",
-        "te": "ఈ పాత్ర మహాభారతంతో సంబంధం కలిగి ఉందా?"
-      },
-      "category": "Epic"
-    },
-    {
-      "id": "q_is_serpent",
-      "text": {
-        "en": "Is this entity a Naga or serpent figure?",
-        "te": "ఈ పాత్ర ఒక నాగరాజు లేదా సర్పమా?"
-      },
-      "category": "Lineage"
-    },
-    {
-      "id": "q_sarpa_yaga",
-      "text": {
-        "en": "Was this character targeted in Janamejaya's Sarpa Yaga?",
-        "te": "ఈ పాత్ర జనమేజయుని సర్పయాగంలో లక్ష్యంగా మారిందా?"
-      },
-      "category": "Event"
-    }
+    { "id": "q_is_male", "question_text": "Is this character male?", "category": "Demographics" },
+    { "id": "q_is_female", "question_text": "Is this character female?", "category": "Demographics" },
+    { "id": "q_is_human", "question_text": "Is this character a mortal human?", "category": "Demographics" },
+    { "id": "q_is_divine", "question_text": "Is this character considered a God, Goddess, or celestial being?", "category": "Demographics" },
+    { "id": "q_is_animal_creature", "question_text": "Does this character primarily have an animal, serpent, bird, or vanara form?", "category": "Demographics" },
+    { "id": "q_is_immortal", "question_text": "Is this character considered a Chiranjeevi (immortal) or untouched by mortal death?", "category": "Demographics" },
+    
+    { "id": "q_epic_mahabharata", "question_text": "Is this character primarily from the Mahabharata?", "category": "Source" },
+    { "id": "q_epic_ramayana", "question_text": "Is this character primarily from the Ramayana?", "category": "Source" },
+    { "id": "q_source_puranas", "question_text": "Are this character's main legends found in the Puranas (e.g., stories of Shiva, Vishnu, Devi)?", "category": "Source" },
+    { "id": "q_source_vedas", "question_text": "Is this character a Vedic deity (like Agni, Indra, or Vayu)?", "category": "Source" },
+    { "id": "q_historical_figure", "question_text": "Is this a real historical figure (like a king, scholar, or poet) rather than a mythological one?", "category": "Source" },
+    { "id": "q_is_regional_folklore", "question_text": "Is this character primarily known through regional folklore or specific local traditions?", "category": "Source" },
+  
+    { "id": "q_side_pandavas", "question_text": "Did this character fight for or support the Pandavas?", "category": "Allegiance" },
+    { "id": "q_side_kauravas", "question_text": "Did this character fight for or support the Kauravas?", "category": "Allegiance" },
+    { "id": "q_is_asura_rakshasa", "question_text": "Is this character classified as an Asura, Rakshasa, or Daitya (demon)?", "category": "Allegiance" },
+    { "id": "q_side_vanara", "question_text": "Is this character part of the Vanara (monkey) kingdom?", "category": "Allegiance" },
+    { "id": "q_is_avatar_vishnu", "question_text": "Is this character an Avatar of Lord Vishnu?", "category": "Allegiance" },
+    { "id": "q_related_to_shiva", "question_text": "Is this character a direct family member, avatar, or primary attendant of Lord Shiva?", "category": "Allegiance" },
+  
+    { "id": "q_is_king_queen", "question_text": "Is this character a King, Queen, or ruling monarch?", "category": "Role" },
+    { "id": "q_is_sage_guru", "question_text": "Is this character a Sage (Rishi), Guru, or teacher?", "category": "Role" },
+    { "id": "q_is_warrior", "question_text": "Is this character famous for their skills on the battlefield?", "category": "Role" },
+    { "id": "q_is_antagonist", "question_text": "Is this character considered a primary antagonist or villain?", "category": "Role" },
+    { "id": "q_is_creator_destroyer", "question_text": "Is this character part of the Hindu Trinity (Trimurti/Tridevi) responsible for creation, preservation, or destruction?", "category": "Role" },
+    { "id": "q_is_poet_scholar", "question_text": "Is this character a famous poet, author, or scholar (like Valmiki or Vyasa)?", "category": "Role" },
+  
+    { "id": "q_has_bow", "question_text": "Is this character famously associated with wielding a bow?", "category": "Weapons" },
+    { "id": "q_has_mace", "question_text": "Is this character famous for fighting with a mace (Gada)?", "category": "Weapons" },
+    { "id": "q_has_sword_dagger", "question_text": "Is this character's primary weapon a sword or dagger?", "category": "Weapons" },
+    { "id": "q_has_trident_spear", "question_text": "Does this character wield a trident (Trishul) or a spear (Vel)?", "category": "Weapons" },
+    { "id": "q_has_chakra_discus", "question_text": "Does this character wield a spinning discus (Chakra)?", "category": "Weapons" },
+    { "id": "q_chariot_fighter", "question_text": "Is this character famous for fighting from a chariot, or being a charioteer?", "category": "Weapons" },
+  
+    { "id": "q_cursed_or_vowed", "question_text": "Is this character famous for giving a curse, receiving a curse, or taking a severe vow?", "category": "Lore" },
+    { "id": "q_multiple_limbs_heads", "question_text": "Does this character have multiple heads or more than two arms?", "category": "Lore" },
+    { "id": "q_extreme_devotee", "question_text": "Is this character legendary for their extreme devotion (Bhakti) to a deity or person?", "category": "Lore" },
+    { "id": "q_exiled_forest", "question_text": "Did this character famously spend years exiled in a forest?", "category": "Lore" },
+    { "id": "q_associated_with_fire", "question_text": "Was this character born from fire, or do they control the element of fire?", "category": "Lore" },
+    { "id": "q_tragic_death_or_life", "question_text": "Did this character live a notoriously tragic life, or suffer an unfair death?", "category": "Lore" },
+    { "id": "q_magical_boon_receiver", "question_text": "Did this character receive a powerful magical boon that made them nearly invincible?", "category": "Lore" },
+    { "id": "q_associated_with_music_arts", "question_text": "Is this character closely associated with music, playing an instrument, or the arts?", "category": "Lore" },
+    { "id": "q_vahan_animal_mount", "question_text": "Does this character famously ride an animal mount (Vahana)?", "category": "Lore" },
+    { "id": "q_known_for_celibacy", "question_text": "Is this character famous for practicing strict celibacy (Brahmacharya)?", "category": "Lore" }
   ]
 
-  
