@@ -12,7 +12,7 @@ def generate_characters(theme: str, count: int = 10):
     with open("data/questions.json", "r") as f:
         questions = json.load(f)
     
-    question_list = "\n".join([f"{q['id']}: {q['question_text']}" for q in questions])
+    question_list = "\n".join([f"{q['id']}: {q['text']['en']}" for q in questions])
     
     prompt = f"""
     You are an expert in Indian History and Mythology. Generate exactly {count} unique characters based on this theme: {theme}.
