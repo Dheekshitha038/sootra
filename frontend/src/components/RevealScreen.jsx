@@ -21,7 +21,7 @@ export default function RevealScreen({ prediction, confidence, onExplore, onRest
       <div className="jg-meta">confidence {(confidence * 100).toFixed(0)}%</div>
       <div className="jg-actions">
         <button className="jg-btn jg-btn-primary jg-btn-primary--sm" onClick={onExplore}>
-          See on Map &amp; Timeline
+          See on Map &amp; Timelined 
         </button>
         <button className="jg-btn jg-btn-secondary jg-btn-secondary--sm" onClick={onRestart}>
           Play again

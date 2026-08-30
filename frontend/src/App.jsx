@@ -75,7 +75,7 @@ export default function App() {
         {screen === "reveal" && prediction && (
           <RevealScreen prediction={prediction} confidence={confidence} onExplore={() => setScreen("map")} onRestart={restart} />
         )}
-        {screen === "map" && prediction && <MapTimeline entity={prediction} onBack={() => setScreen("reveal")} onRestart={restart} />}
+        {screen === "map" && prediction && <MapTimeline entityId={prediction.id} onBack={() => setScreen("reveal")} onRestart={restart} />}
       </div>
     </div>
   );
